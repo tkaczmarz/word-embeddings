@@ -1,0 +1,3 @@
+Needed packages:
+- gensim
+- nltk
