@@ -5,7 +5,7 @@ import os
 os.environ["TF_CPP_MIN_LOG_LEVEL"] = "3"
 # logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s', level=logging.INFO)
 
-model = Word2Vec.load('billion-model')
+model = Word2Vec.load('models/billion-model')
 
 print('sim(Berlin, Germany) = ' + str(model.similarity('Berlin', 'Germany')))
 print('sim(strong, France) = ' + str(model.similarity('strong', 'France')))

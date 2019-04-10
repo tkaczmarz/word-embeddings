@@ -26,11 +26,11 @@ with open(input_data, encoding="utf8") as input_file:
         for line in input_file:
             counter += 1
             # w2v_corpus.append(line)
-            output_file.write(str(preprocess(line)))
+            output_file.write(str(preprocess(line)) + "\n")
             if counter % 10000 == 0:
                 print("Progress: " + str(counter) + " lines")
-                break
 
+print("Finished!")
 # reading preprocessed data
 # with open(output_data, 'r', encoding="utf8") as output_file:
 #     w2v_corpus = output_file.read().splitlines()
