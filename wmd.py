@@ -1,77 +1,97 @@
 from gensim.models import Word2Vec
 from gensim.models import KeyedVectors
-from gensim.models.keyedvectors import Word2VecKeyedVectors
 from nltk.corpus import stopwords
-from nltk import download
+from nltk import word_tokenize
 import logging
 import time
 
 # logging.basicConfig(format='%(asctime)s : %(levelname)s : %(message)s')
 
-sentence_obama = 'Obama speaks to the media in Illinois'
-sentence_president = 'The president greets the press in Chicago'
-sentence_band = 'The band gave a concert in Japan'
-obama_speaks = 'Obama speaks in Illinois'
-sentence_obama_proc = sentence_obama.lower().split()
-sentence_president_proc = sentence_president.lower().split()
-sentence_band_proc = sentence_band.lower().split()
-obama_speaks_proc = obama_speaks.lower().split()
+polish = False
 
-download('stopwords')
+def dist(vectors, doc1, doc2, preprocess=True):
+    # print(doc1 + ' -> ' + doc2)
+    if preprocess:
+        print('preprocessing first document...')
+        doc1 = preproc(doc1)
+        print('preprocessing second document...')
+        doc2 = preproc(doc2)
 
-# Remove stopwords.
-stop_words = stopwords.words('english')
-sentence_obama_proc = [w for w in sentence_obama_proc if w not in stop_words]
-sentence_president_proc = [w for w in sentence_president_proc if w not in stop_words]
-sentence_band_proc = [w for w in sentence_band_proc if w not in stop_words]
-obama_speaks_proc = [w for w in obama_speaks_proc if w not in stop_words]
+    print('calculating distance...')
+    d = vectors.wmdistance(doc1, doc2)
+    print(' -----> Distance: ' + str(d))
 
 
-def dist(doc1, doc2):
-    print(doc1 + ' -> ' + doc2)
-    d = model.wmdistance(doc1, doc2)
-    print(str(d))
+def preproc(doc):
+    doc_proc = word_tokenize(doc.lower())
+    words = get_stopwords()#.split()
+    doc_proc = [w for w in doc_proc if w not in words]
+    doc_proc = [w for w in doc_proc if w.isalpha()]
+    return doc_proc
 
 
-print('loading model...')
-# model = Word2Vec.load('models/billion-model')
-polish = True
+def get_stopwords():
+    if not polish:
+        return open('data/stopwords/english.stopwords.txt', encoding='utf8').read()
+    else:
+        return open('data/stopwords/polish.stopwords.txt', encoding='utf8').read()
 
-if not polish:
-    file = 'models/GoogleNews-vectors-negative300.bin'
-    model = KeyedVectors.load_word2vec_format(file, binary=True)
-    model.init_sims(replace=True)  # normalize vectors
-    print('VOCAB LEN: ' + str(len(model.vocab)))
-    # i = 0
-    # for word in model.vocab:
-    #     print('Word: ' + str(word))
-    #     i += 1
-    #     if i > 200:
-    #         break
-    print(sentence_obama)
-    distance = model.wmdistance(sentence_president_proc, sentence_obama_proc)
-    print(str(distance))
-    print(sentence_president)
-    distance = model.wmdistance(sentence_band_proc, sentence_president_proc)
-    print(str(distance))
-    print(sentence_band)
 
-    print('\n' + sentence_president)
-    distance = model.wmdistance(obama_speaks_proc, sentence_president_proc)
-    print(str(distance))
-    print(obama_speaks)
-else:
-    file = 'models/polish-converted100.bin'
-    model = KeyedVectors.load_word2vec_format(file, binary=True, encoding='utf8')
-    model.init_sims(replace=True)  # normalize vectors
-    print('VOCAB LEN: ' + str(len(model.vocab)))
-    # i = 0
-    # for word in model.vocab:
-    #     print('Word: ' + str(word))
-    #     i += 1
-    #     if i > 20:
-    #         break
-    dist('chleb', 'bułka')
-    dist('chleb', 'samochód')
-    dist('Prezydent przemawiał przed publicznością w Radomiu.', 'Prezydent udzielił wywiadu reporterom w Gdańsku.')
-    dist('Prezydent przemawiał przed publicznością w Radomiu.', 'Zespół dał koncert w Japonii.')
+def get_model(normalize=True):
+    if polish:
+        print('loading Polish model...')
+        model = KeyedVectors.load_word2vec_format('models/polish-converted100.bin', binary=True)
+    else:
+        print('loading English model...')
+        model = KeyedVectors.load_word2vec_format('models/GoogleNews-vectors-negative300.bin', binary=True)
+    print('model loaded!')
+    if normalize:
+        model.init_sims(replace=True)
+    return model
+
+
+# print('loading model...')
+# # model = Word2Vec.load('models/billion-model')
+#
+# if not polish:
+#     sentence_obama = 'Obama speaks to the media in Illinois'
+#     sentence_president = 'The president greets the press in Chicago'
+#     sentence_band = 'The band gave a concert in Japan'
+#     obama_speaks = 'Obama speaks in Illinois'
+#
+#     # print('Before: ' + sentence_obama)
+#     # print('After: ' + str(preproc(sentence_obama)))
+#
+#     file = 'models/GoogleNews-vectors-negative300.bin'
+#     model = KeyedVectors.load_word2vec_format(file, binary=True)
+#     model.init_sims(replace=True)  # normalize vectors
+#     # print('VOCAB LEN: ' + str(len(model.vocab)))
+#     # i = 0
+#     # for word in model.vocab:
+#     #     print('Word: ' + str(word))
+#     #     i += 1
+#     #     if i > 20:
+#     #         break
+#
+#     dist(model, sentence_president, sentence_obama)
+#     dist(model, sentence_band, sentence_president)
+#     dist(model, obama_speaks, sentence_president)
+# else:
+#     # print('Before: ' + 'Prezydent przemawiał przed publicznością w Radomiu')
+#     # print('After: ' + str(preproc('Prezydent przemawiał przed publicznością w Radomiu')))
+#
+#     file = 'models/polish-converted100.bin'
+#     model = KeyedVectors.load_word2vec_format(file, binary=True, encoding='utf8')
+#     model.init_sims(replace=True)  # normalize vectors
+#     # print('VOCAB LEN: ' + str(len(model.vocab)))
+#     # i = 0
+#     # for word in model.vocab:
+#     #     print('Word: ' + str(word))
+#     #     i += 1
+#     #     if i > 20:
+#     #         break
+#
+#     dist(model, 'chleb', 'bułka')
+#     dist(model, 'chleb', 'samochód')
+#     dist(model, 'Prezydent przemawiał przed publicznością w Radomiu', 'Prezydent udzielił wywiadu reporterom w Gdańsku')
+#     dist(model, 'Prezydent przemawiał przed publicznością w Radomiu', 'Zespół dał koncert w Japonii')
